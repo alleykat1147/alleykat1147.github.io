@@ -1,91 +1,111 @@
-    <script>
-        // --- YOUR FIREBASE CONFIG ---
-        const firebaseConfig = {
-  apiKey: "AIzaSyBhr_X1Hv_wZKrIZRsc_UvxL_LXZZDVgRA",
-  authDomain: "wiwtww-776c7.firebaseapp.com",
-  projectId: "wiwtww-776c7",
-  storageBucket: "wiwtww-776c7.firebasestorage.app",
-  messagingSenderId: "187458789654",
-  appId: "1:187458789654:web:f9c2e1888f196c64523037"
-};
-        // --- END OF CONFIG ---
+<script>
+    // --- YOUR FIREBASE CONFIG ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhr_X1Hv_wZKrIZRsc_UvxL_LXZZDVgRA",
+        authDomain: "wiwtww-776c7.firebaseapp.com",
+        projectId: "wiwtww-776c7",
+        storageBucket: "wiwtww-776c7.appspot.com", // <-- FIXED
+        messagingSenderId: "187458789654",
+        appId: "1:187458789654:web:f9c2e1888f196c64523037"
+    };
+    // --- END OF CONFIG ---
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        const poemsCollection = db.collection('poems');
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const poemsCollection = db.collection('poems');
 
-        // UI Elements
-        const loginView = document.getElementById('login-view');
-        const appView = document.getElementById('app-view');
-        const loginBtn = document.getElementById('login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        const loginError = document.getElementById('login-error');
-        const addPoemBtn = document.getElementById('add-poem-btn');
-        const poemsContainer = document.getElementById('poems-container');
+    // UI Elements
+    const loginView = document.getElementById('login-view');
+    const appView = document.getElementById('app-view');
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const loginError = document.getElementById('login-error');
+    const addPoemBtn = document.getElementById('add-poem-btn');
+    const poemsContainer = document.getElementById('poems-container');
 
-        // --- Authentication Logic ---
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                // User is signed in, now we load the poems
-                loginView.classList.add('hidden');
-                appView.classList.remove('hidden');
-                loadPoems(user.uid); // Pass the user's ID to the load function
-            } else {
-                // User is signed out
-                loginView.classList.remove('hidden');
-                appView.classList.add('hidden');
-                poemsContainer.innerHTML = ''; // Clear poems when logged out
-            }
-        });
-
-        loginBtn.addEventListener('click', () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            auth.signInWithEmailAndPassword(email, password)
-                .catch(error => {
-                    loginError.textContent = error.message;
-                    loginError.classList.remove('hidden');
-                });
-        });
-
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut();
-        });
-
-        // --- Firestore (Poem) Logic ---
-        async function loadPoems(uid) {
-        
-        addPoemBtn.addEventListener('click', async () => {
-            const title = document.getElementById('new-poem-title').value;
-            const text = document.getElementById('new-poem-text').value;
-            const currentUser = auth.currentUser;
-
-            if (!title || !text) {
-                alert('Please provide a title and text for your poem.');
-                return;
-            }
-            if (!currentUser) {
-                alert('You must be logged in to add a poem.');
-                return;
-            }
-
-            await poemsCollection.add({
-                title: title,
-                text: text,
-                authorId: currentUser.uid, // Tag the poem with the user's ID
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            document.getElementById('new-poem-title').value = '';
-            document.getElementById('new-poem-text').value = '';
-            loadPoems(currentUser.uid);
-        });
-
-        async function deletePoem(id) {
-            if (confirm('Are you sure you want to delete this poem?')) {
-                await poemsCollection.doc(id).delete();
-                loadPoems(auth.currentUser.uid);
-            }
+    // --- Authentication Logic ---
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            loginView.classList.add('hidden');
+            appView.classList.remove('hidden');
+            loadPoems(user.uid);
+        } else {
+            loginView.classList.remove('hidden');
+            appView.classList.add('hidden');
+            poemsContainer.innerHTML = '';
         }
-    </script>
+    });
+
+    loginBtn.addEventListener('click', () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        auth.signInWithEmailAndPassword(email, password)
+            .catch(error => {
+                loginError.textContent = error.message;
+                loginError.classList.remove('hidden');
+            });
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        auth.signOut();
+    });
+
+    // --- Firestore (Poem) Logic ---
+    async function loadPoems(uid) {
+        const snapshot = await poemsCollection
+            .where('authorId', '==', uid)
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        poemsContainer.innerHTML = '';
+        snapshot.forEach(doc => {
+            const poem = doc.data();
+            const poemDiv = document.createElement('div');
+            poemDiv.classList.add('poem');
+            poemDiv.innerHTML = `
+                <h3>${poem.title}</h3>
+                <pre>${poem.text}</pre>
+                <button class="delete-poem-btn" data-id="${doc.id}">Delete</button>
+            `;
+            poemsContainer.appendChild(poemDiv);
+        });
+
+        // Attach delete handlers
+        document.querySelectorAll('.delete-poem-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                if (confirm('Are you sure you want to delete this poem?')) {
+                    await poemsCollection.doc(id).delete();
+                    loadPoems(uid);
+                }
+            });
+        });
+    }
+
+    addPoemBtn.addEventListener('click', async () => {
+        const title = document.getElementById('new-poem-title').value;
+        const text = document.getElementById('new-poem-text').value;
+        const currentUser = auth.currentUser;
+
+        if (!title || !text) {
+            alert('Please provide a title and text for your poem.');
+            return;
+        }
+        if (!currentUser) {
+            alert('You must be logged in to add a poem.');
+            return;
+        }
+
+        await poemsCollection.add({
+            title: title,
+            text: text,
+            authorId: currentUser.uid,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        document.getElementById('new-poem-title').value = '';
+        document.getElementById('new-poem-text').value = '';
+        loadPoems(currentUser.uid);
+    });
+</script>
