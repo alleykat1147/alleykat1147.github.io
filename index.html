@@ -47,14 +47,25 @@
 
     <script>
         // --- START: PASTE YOUR FIREBASE CONFIG HERE ---
-        const firebaseConfig = {
-  apiKey: "AIzaSyATx5vTYlYPXLUnPcgLoicISLnRASznzV8",
-  authDomain: "wiwtww-776c7.firebaseapp.com",
-  projectId: "wiwtww-776c7",
-  storageBucket: "wiwtww-776c7.firebasestorage.app",
-  messagingSenderId: "187458789654",
-  appId: "1:187458789654:web:7e24174a6736e4a3523037"
-};
+        <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBhr_X1Hv_wZKrIZRsc_UvxL_LXZZDVgRA",
+    authDomain: "wiwtww-776c7.firebaseapp.com",
+    projectId: "wiwtww-776c7",
+    storageBucket: "wiwtww-776c7.firebasestorage.app",
+    messagingSenderId: "187458789654",
+    appId: "1:187458789654:web:f9c2e1888f196c64523037"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+</script>
         // --- END: PASTE YOUR FIREBASE CONFIG HERE ---
 
         // Initialize Firebase
