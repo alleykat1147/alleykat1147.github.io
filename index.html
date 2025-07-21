@@ -21,9 +21,9 @@
                     Publish All & Get Link
                 </button>
                 <label for="upload-poem" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded cursor-pointer">
-                    Upload Poem (.txt)
+                    Upload Poems (.txt)
                 </label>
-                <input type="file" id="upload-poem" class="hidden" accept=".txt">
+                <input type="file" id="upload-poem" class="hidden" accept=".txt" multiple>
             </div>
         </div>
         <div id="poems-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -44,20 +44,27 @@
         }
 
         uploadPoemInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const newPoem = {
-                        id: Date.now(),
-                        title: file.name.replace('.txt', ''),
-                        text: e.target.result
+            const files = event.target.files;
+            if (files.length > 0) {
+                for (const file of files) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const newPoem = {
+                            id: Date.now() + Math.random(), // Add random number to ensure unique ID for simultaneous uploads
+                            title: file.name.replace('.txt', ''),
+                            text: e.target.result
+                        };
+                        poems.push(newPoem);
+                        // We will save and render after the loop
                     };
-                    poems.push(newPoem);
+                    reader.readAsText(file);
+                }
+
+                // Wait a moment for all file reading to complete, then save and render
+                setTimeout(() => {
                     savePoems();
                     renderPoems();
-                };
-                reader.readAsText(file);
+                }, 100); 
             }
         });
 
@@ -72,6 +79,7 @@
 
         function renderPoems() {
             poemsContainer.innerHTML = '';
+            poems.sort((a, b) => a.id - b.id); // Sort poems to maintain order
             poems.forEach(poem => {
                 const poemCard = document.createElement('div');
                 poemCard.className = 'bg-white p-4 rounded shadow';
@@ -90,7 +98,10 @@
         function savePoem(id) {
             const poemIndex = poems.findIndex(p => p.id === id);
             if (poemIndex > -1) {
-                const poemCard = poemsContainer.children[poemIndex];
+                const poemCard = Array.from(poemsContainer.children).find(card => {
+                    const saveButton = card.querySelector('button');
+                    return saveButton && saveButton.getAttribute('onclick') === `savePoem(${id})`;
+                });
                 const textarea = poemCard.querySelector('textarea');
                 poems[poemIndex].text = textarea.value;
                 savePoems();
