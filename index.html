@@ -8,7 +8,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap');
         body { font-family: 'Lora', serif; }
-        /* Simple class to hide elements */
         .hidden { display: none; }
     </style>
 </head>
@@ -17,7 +16,6 @@
     <div id="login-view" class="flex items-center justify-center h-screen">
         <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
             <h2 class="text-2xl font-bold mb-6 text-center">Login to Editor</h2>
-            <div id="login-error" class="text-red-500 text-sm mb-4 hidden"></div>
             <input type="email" id="email" placeholder="Email" class="w-full p-2 mb-4 border rounded">
             <input type="password" id="password" placeholder="Password" class="w-full p-2 mb-4 border rounded">
             <button id="login-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Login</button>
@@ -46,72 +44,61 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // --- START: PASTE YOUR FIREBASE CONFIG HERE ---
-        <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+        // --- PASTE YOUR FIREBASE CONFIG HERE ---
+        const const firebaseConfig = {
+  apiKey: "AIzaSyBhr_X1Hv_wZKrIZRsc_UvxL_LXZZDVgRA",
+  authDomain: "wiwtww-776c7.firebaseapp.com",
+  projectId: "wiwtww-776c7",
+  storageBucket: "wiwtww-776c7.firebasestorage.app",
+  messagingSenderId: "187458789654",
+  appId: "1:187458789654:web:f9c2e1888f196c64523037"
+};
+        // --- END OF FIREBASE CONFIG ---
 
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyBhr_X1Hv_wZKrIZRsc_UvxL_LXZZDVgRA",
-    authDomain: "wiwtww-776c7.firebaseapp.com",
-    projectId: "wiwtww-776c7",
-    storageBucket: "wiwtww-776c7.firebasestorage.app",
-    messagingSenderId: "187458789654",
-    appId: "1:187458789654:web:f9c2e1888f196c64523037"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-</script>
-        // --- END: PASTE YOUR FIREBASE CONFIG HERE ---
-
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
         const poemsCollection = db.collection('poems');
 
-        // UI Elements
         const loginView = document.getElementById('login-view');
         const appView = document.getElementById('app-view');
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
-        const loginError = document.getElementById('login-error');
         const addPoemBtn = document.getElementById('add-poem-btn');
         const poemsContainer = document.getElementById('poems-container');
 
-        // --- Authentication Logic ---
         auth.onAuthStateChanged(user => {
             if (user) {
-                // User is signed in
                 loginView.classList.add('hidden');
                 appView.classList.remove('hidden');
                 loadPoems();
             } else {
-                // User is signed out
                 loginView.classList.remove('hidden');
                 appView.classList.add('hidden');
             }
         });
 
         loginBtn.addEventListener('click', () => {
+            alert("Debug: Login button clicked!"); // DEBUG ALERT 1
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                alert("Please enter both email and password.");
+                return;
+            }
+
+            alert("Debug: Attempting to sign in..."); // DEBUG ALERT 2
+
             auth.signInWithEmailAndPassword(email, password)
                 .catch(error => {
-                    loginError.textContent = error.message;
-                    loginError.classList.remove('hidden');
+                    // This will show the actual Firebase error message in a pop-up
+                    alert("Login Error: " + error.message);
                 });
         });
 
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut();
-        });
+        logoutBtn.addEventListener('click', () => { auth.signOut(); });
 
-        // --- Firestore (Poem) Logic ---
         async function loadPoems() {
             poemsContainer.innerHTML = '';
             const snapshot = await poemsCollection.orderBy('createdAt', 'desc').get();
@@ -132,7 +119,7 @@
             const title = document.getElementById('new-poem-title').value;
             const text = document.getElementById('new-poem-text').value;
             if (!title || !text) {
-                alert('Please provide a title and text for your poem.');
+                alert('Please provide a title and text.');
                 return;
             }
             await poemsCollection.add({
