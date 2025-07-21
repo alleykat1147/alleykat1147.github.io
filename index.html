@@ -56,22 +56,7 @@
 
         // --- Firestore (Poem) Logic ---
         async function loadPoems(uid) {
-            poemsContainer.innerHTML = '';
-            // Only get poems that belong to the current user
-            const snapshot = await poemsCollection.where('authorId', '==', uid).orderBy('createdAt', 'desc').get();
-            snapshot.forEach(doc => {
-                const poem = doc.data();
-                const poemCard = document.createElement('div');
-                poemCard.className = 'bg-white p-6 rounded-lg shadow-md';
-                poemCard.innerHTML = `
-                    <h2 class="text-xl font-bold mb-2">${poem.title}</h2>
-                    <pre class="whitespace-pre-wrap font-sans text-gray-600 mb-4">${poem.text}</pre>
-                    <button onclick="deletePoem('${doc.id}')" class="text-sm text-red-500 hover:underline">Delete</button>
-                `;
-                poemsContainer.appendChild(poemCard);
-            });
-        }
-
+        
         addPoemBtn.addEventListener('click', async () => {
             const title = document.getElementById('new-poem-title').value;
             const text = document.getElementById('new-poem-text').value;
